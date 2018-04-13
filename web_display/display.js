@@ -15,8 +15,8 @@ var sphereVertexPositionBuffer;
 var sphereVertexNormalBuffer;
 
 // View parameters
-var eyePt = vec3.fromValues(147098000000.0,0.0,150.0);
-var viewDir = vec3.fromValues(0.0,0.0,-1.0);
+var eyePt = vec3.fromValues(0,0,10);
+var viewDir = vec3.fromValues(0,0,-1.0);
 var up = vec3.fromValues(0.0,1.0,0.0);
 var viewPt = vec3.fromValues(0.0,0.0,0.0);
 
@@ -87,7 +87,7 @@ function drawSphere(cur_sphere){
  kd = vec3.fromValues(.4,0.4,0.4);
  ks = vec3.fromValues(.2*materialr,.2*materialg,.2*materialb);
     
- var lightPosEye4 = vec4.fromValues(0.0, 0.0,0.0,1.0);
+ var lightPosEye4 = vec4.fromValues(2.0,2.0,2.0,1.0);
  lightPosEye4 = vec4.transformMat4(lightPosEye4,lightPosEye4,mvMatrix);
  var lightPosEye = vec3.fromValues(lightPosEye4[0],lightPosEye4[1],lightPosEye4[2]);
     
@@ -315,10 +315,12 @@ function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // We'll use perspective 
-    mat4.perspective(pMatrix,degToRad(45), gl.viewportWidth / gl.viewportHeight, 0.1, 200.0);
+    //mat4.perspective(pMatrix,degToRad(45), gl.viewportWidth / gl.viewportHeight, 0.1, 200.0);
+    var bound = 200000000000;
+    mat4.ortho(pMatrix, -1*bound, bound, -1*bound, bound, -1*bound, bound);
 
     // We want to look down -z, so create a lookat point in that direction    
-    vec3.add(viewPt, eyePt, viewDir);
+    //vec3.add(viewPt, eyePt, viewDir);
     // Then generate the lookat matrix and initialize the MV matrix to that view
     mat4.lookAt(mvMatrix,eyePt,viewPt,up);    
     
@@ -355,30 +357,31 @@ function convertToMatrix(text)
     data.push(cur_body_matrix);
 }
 
-function update_positions(frame_num){
+function update_positions(position_idx){
     positionMatrix = [];
-    scaleMatrix = [];
-    materialMatrix = [];
     num_spheres = 0;
     for(var i=0; i<data.length; i++){
         num_spheres++;
         
-        var position_vector = data[i][frame_num].split(" ");
+        var position_vector = data[i][position_idx].split(" ");
         
         positionMatrix.push(parseFloat(position_vector[0]));
         positionMatrix.push(parseFloat(position_vector[1]));
         positionMatrix.push(parseFloat(position_vector[2]));
-        
-        var new_scale = 30;
-        scaleMatrix.push(new_scale);
-        scaleMatrix.push(new_scale);
-        scaleMatrix.push(new_scale);
+    }
+}
+
+function set_scale_and_material(){
+    for(var i=0; i<data.length; i++){        
+        var new_scale = 10000000000;
+        scaleMatrix.push(new_scale/(5*i+1));
+        scaleMatrix.push(new_scale/(5*i+1));
+        scaleMatrix.push(new_scale/(5*i+1));
         
         materialMatrix.push(Math.random()*(1-.3)+.3);
         materialMatrix.push(Math.random()*(1-.3)+.3);
         materialMatrix.push(Math.random()*(1-.3)+.3);
     }
-    console.log(positionMatrix);
 }
 
 //----------------------------------------------------------------------------------
@@ -393,19 +396,21 @@ function startup() {
   readTextFile("body_num_0.txt");
   readTextFile("body_num_1.txt");
   readTextFile("body_num_2.txt");
-  console.log(data);
+  set_scale_and_material();
   tick();
 }
 
 //----------------------------------------------------------------------------------
 function tick() {
     requestAnimFrame(tick);
-    update_positions(frame_num)
+    var position_idx = frame_num * 100;
+    if(position_idx < data[0].length - 1){
+        update_positions(position_idx);
+    }
+    console.log(positionMatrix);
     draw();
     frame_num = frame_num + 1;
-    if(frame_num > data[0].length){
-        alert("End of Simulation");
-    }
+    console.log(frame_num);
 }
 
 /**
