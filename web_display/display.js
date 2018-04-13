@@ -393,9 +393,9 @@ function startup() {
   setupBuffers();
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
-  readTextFile("body_num_0.txt");
-  readTextFile("body_num_1.txt");
-  readTextFile("body_num_2.txt");
+  readTextFile("http://localhost:8000/body_num_0.txt");
+  readTextFile("http://localhost:8000/body_num_1.txt");
+  readTextFile("http://localhost:8000/body_num_2.txt");
   set_scale_and_material();
   tick();
 }
