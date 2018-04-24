@@ -374,10 +374,16 @@ function update_positions(position_idx){
 function set_scale_and_material(){
     for(var i=0; i<data.length; i++){        
         var new_scale = 10000000000;
-        scaleMatrix.push(new_scale/(5*i+1));
-        scaleMatrix.push(new_scale/(5*i+1));
-        scaleMatrix.push(new_scale/(5*i+1));
-        
+        if(i == 0){
+            scaleMatrix.push(new_scale);
+            scaleMatrix.push(new_scale);
+            scaleMatrix.push(new_scale);
+        }
+        else{
+            scaleMatrix.push(new_scale/5);
+            scaleMatrix.push(new_scale/5);
+            scaleMatrix.push(new_scale/5);
+        }
         materialMatrix.push(Math.random()*(1-.3)+.3);
         materialMatrix.push(Math.random()*(1-.3)+.3);
         materialMatrix.push(Math.random()*(1-.3)+.3);
@@ -396,6 +402,9 @@ function startup() {
   readTextFile("http://localhost:8000/body_num_0.txt");
   readTextFile("http://localhost:8000/body_num_1.txt");
   readTextFile("http://localhost:8000/body_num_2.txt");
+  readTextFile("http://localhost:8000/body_num_3.txt");
+  readTextFile("http://localhost:8000/body_num_4.txt");
+  readTextFile("http://localhost:8000/body_num_5.txt");
   set_scale_and_material();
   tick();
 }

@@ -2,7 +2,7 @@
 
 echo "Running simulation..."
 rm web_display/body_num_*.txt
-python -W ignore sim.py 17520 1800 given sim_initial_data/solar_system.txt
+python -W ignore sim.py 27520 1800 given sim_initial_data/solar_system.txt
 cp ./results/body_num_*.txt web_display
 
 cd web_display
