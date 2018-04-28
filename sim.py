@@ -161,7 +161,7 @@ class Simulation:
 
 	def generate_plots(self):
 		"""
-		This function generates plots for each time step and compiles them into a gif.
+		This function generates plots for each time step.
 		"""
 		# Remove all old plots
 		for filename in os.listdir("./plots"):
@@ -212,12 +212,6 @@ class Simulation:
 			plt.ylim(-1*bound, bound)
 			plt.savefig("./plots/plot"+file_number+".png")
 			plt.close()
-
-		# Generate a gif of all the plots
-		images = []
-		for filename in os.listdir("./plots"):
-			images.append(imageio.imread("./plots/"+filename))
-		imageio.mimsave("./results/plots.gif", images)
 
 		# Generate energy plots
 		plt.plot(t, U)

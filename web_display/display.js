@@ -7,6 +7,12 @@ var vertexPositionBuffer;
 var UDAngle=0.0, eyeQuatUD = quat.create(), RLAngle = 0.0, eyeQuatLR=quat.create(), YAngle = 0.0, eyeQuatY=quat.create();
 var axisToRot = vec3.create();
 var speed = 0.00;
+var bound = 200000000000;
+var sun_scale = 10000000000;
+var planet_scale = [2000000000, 2000000000, 2000000000, 2000000000, 2000000000*3, 2000000000*2, 2000000000, 2000000000];
+var play_bool = true;
+var increase_scale_bool = true;
+var speed_of_rotation = 10;
 
 // Create a place to store sphere geometry
 var sphereVertexPositionBuffer;
@@ -316,7 +322,6 @@ function draw() {
 
     // We'll use perspective 
     //mat4.perspective(pMatrix,degToRad(45), gl.viewportWidth / gl.viewportHeight, 0.1, 200.0);
-    var bound = 200000000000;
     mat4.ortho(pMatrix, -1*bound, bound, -1*bound, bound, -1*bound, bound);
 
     // We want to look down -z, so create a lookat point in that direction    
@@ -362,9 +367,9 @@ function update_positions(position_idx){
     num_spheres = 0;
     for(var i=0; i<data.length; i++){
         num_spheres++;
-        
+
         var position_vector = data[i][position_idx].split(" ");
-        
+
         positionMatrix.push(parseFloat(position_vector[0]));
         positionMatrix.push(parseFloat(position_vector[1]));
         positionMatrix.push(parseFloat(position_vector[2]));
@@ -372,22 +377,56 @@ function update_positions(position_idx){
 }
 
 function set_scale_and_material(){
+    scaleMatrix = [];
+    materialMatrix = [];
     for(var i=0; i<data.length; i++){        
-        var new_scale = 10000000000;
         if(i == 0){
-            scaleMatrix.push(new_scale);
-            scaleMatrix.push(new_scale);
-            scaleMatrix.push(new_scale);
+            scaleMatrix.push(sun_scale);
+            scaleMatrix.push(sun_scale);
+            scaleMatrix.push(sun_scale);
         }
         else{
-            scaleMatrix.push(new_scale/5);
-            scaleMatrix.push(new_scale/5);
-            scaleMatrix.push(new_scale/5);
+            scaleMatrix.push(planet_scale[i-1]);
+            scaleMatrix.push(planet_scale[i-1]);
+            scaleMatrix.push(planet_scale[i-1]);
         }
-        materialMatrix.push(Math.random()*(1-.3)+.3);
-        materialMatrix.push(Math.random()*(1-.3)+.3);
-        materialMatrix.push(Math.random()*(1-.3)+.3);
     }
+    //Sun
+    materialMatrix.push(1);
+    materialMatrix.push(1);
+    materialMatrix.push(0);
+    //Mercury
+    materialMatrix.push(.5);
+    materialMatrix.push(.5);
+    materialMatrix.push(.5);
+    //Venus
+    materialMatrix.push(.6);
+    materialMatrix.push(.6);
+    materialMatrix.push(0);
+    //Earth
+    materialMatrix.push(0);
+    materialMatrix.push(0);
+    materialMatrix.push(1);
+    //Mars
+    materialMatrix.push(1);
+    materialMatrix.push(0);
+    materialMatrix.push(0);
+    //Junipter
+    materialMatrix.push(1);
+    materialMatrix.push(.25);
+    materialMatrix.push(0);
+    //Saturn
+    materialMatrix.push(1);
+    materialMatrix.push(.9);
+    materialMatrix.push(0);
+    //Uranus
+    materialMatrix.push(0);
+    materialMatrix.push(0);
+    materialMatrix.push(1);
+    //Neptune
+    materialMatrix.push(0);
+    materialMatrix.push(0);
+    materialMatrix.push(1);
 }
 
 //----------------------------------------------------------------------------------
@@ -405,6 +444,10 @@ function startup() {
   readTextFile("http://localhost:8000/body_num_3.txt");
   readTextFile("http://localhost:8000/body_num_4.txt");
   readTextFile("http://localhost:8000/body_num_5.txt");
+  readTextFile("http://localhost:8000/body_num_6.txt");
+  readTextFile("http://localhost:8000/body_num_7.txt");
+  readTextFile("http://localhost:8000/body_num_8.txt");
+  readTextFile("http://localhost:8000/body_num_9.txt");
   set_scale_and_material();
   tick();
 }
@@ -412,14 +455,15 @@ function startup() {
 //----------------------------------------------------------------------------------
 function tick() {
     requestAnimFrame(tick);
-    var position_idx = frame_num * 100;
-    if(position_idx < data[0].length - 1){
-        update_positions(position_idx);
+    if(play_bool){
+        var position_idx = frame_num * speed_of_rotation;
+        if(position_idx < data[0].length - 1){
+            update_positions(position_idx);
+        }
+        frame_num = frame_num + 1;
     }
-    console.log(positionMatrix);
+    set_scale_and_material();
     draw();
-    frame_num = frame_num + 1;
-    console.log(frame_num);
 }
 
 /**
@@ -431,43 +475,120 @@ function tick() {
  */
 function onKeyDown(event)
 {
-    //go up
-    if(event.keyCode =="38"){
-        eyePt[1] += .5;
-    }
-    //go down
-    if(event.keyCode =="40"){
-        eyePt[1] -= .5;
-    }
-    //rotate left
-    if(event.keyCode =="85"){
-        //create the quat
-        axisToRot = vec3.clone(up);
-        quat.setAxisAngle(eyeQuatLR, axisToRot, degToRad(1.25/4))
-        
-        //apply the quat
-        vec3.transformQuat(viewDir,viewDir,eyeQuatLR);
-    }
-    //rotate right
-    if(event.keyCode =="73"){
-        axisToRot = vec3.clone(up);
-        quat.setAxisAngle(eyeQuatLR, axisToRot, degToRad(-1.25/4))
-        vec3.transformQuat(viewDir,viewDir,eyeQuatLR);
-    }
-    //go right
+    //Increase planet size - right arrow
     if(event.keyCode =="39"){
-        eyePt[0] += .5;
+        increase_scale_bool = true;
     }
-    //go left
+    //Decrease planet size - left arrow
     if(event.keyCode =="37"){
-        eyePt[0] -= .5;
+        increase_scale_bool = false;
     }
-    //go forward
-    if(event.keyCode =="79"){
-        eyePt[2] -= .5;
+    //Change sun size - 1
+    if(event.keyCode =="49"){
+        if(increase_scale_bool){
+            sun_scale *= 1.1;
+        }
+        else{
+            sun_scale /= 1.1;        
+        }
     }
-    //go backward
+    //Change planet size - 2
+    if(event.keyCode =="50"){
+        if(increase_scale_bool){
+            planet_scale[0] *= 1.1;
+        }
+        else{
+            planet_scale[0] /= 1.1;        
+        }
+    }
+    //Change planet size - 3
+    if(event.keyCode =="51"){
+        if(increase_scale_bool){
+            planet_scale[1] *= 1.1;
+        }
+        else{
+            planet_scale[1] /= 1.1;        
+        }
+    }
+    //Change planet size - 4
+    if(event.keyCode =="52"){
+        if(increase_scale_bool){
+            planet_scale[2] *= 1.1;
+        }
+        else{
+            planet_scale[2] /= 1.1;        
+        }
+    }
+    //Change planet size - 5
+    if(event.keyCode =="53"){
+        if(increase_scale_bool){
+            planet_scale[3] *= 1.1;
+        }
+        else{
+            planet_scale[3] /= 1.1;        
+        }
+    }
+    //Change planet size - 6
+    if(event.keyCode =="54"){
+        if(increase_scale_bool){
+            planet_scale[4] *= 1.1;
+        }
+        else{
+            planet_scale[4] /= 1.1;        
+        }
+    }
+    //Change planet size - 7
+    if(event.keyCode =="55"){
+        if(increase_scale_bool){
+            planet_scale[5] *= 1.1;
+        }
+        else{
+            planet_scale[5] /= 1.1;        
+        }
+    }
+    //Change planet size - 8
+    if(event.keyCode =="56"){
+        if(increase_scale_bool){
+            planet_scale[6] *= 1.1;
+        }
+        else{
+            planet_scale[6] /= 1.1;        
+        }
+    }
+    //Change planet size - 9
+    if(event.keyCode =="57"){
+        if(increase_scale_bool){
+            planet_scale[7] *= 1.1;
+        }
+        else{
+            planet_scale[7] /= 1.1;        
+        }
+    }
+    //Increase display width - up arrow
+    if(event.keyCode =="38"){
+        bound *= 1.1;
+    }
+    //Decrease display width - down arrow
+    if(event.keyCode =="40"){
+        bound /= 1.1;
+    }
+    //Increase speed of rotation - I
+    if(event.keyCode =="73"){
+        speed_of_rotation += 10;
+    }
+    //Decrease speed of rotation - U
+    if(event.keyCode =="85"){
+        speed_of_rotation -= 10;
+        if(speed_of_rotation <= 0){
+            speed_of_rotation = 1;
+        }
+    }
+    // Reset - R
+    if(event.keyCode =="82"){
+        frame_num = 0;
+    }
+    // Pause - P
     if(event.keyCode =="80"){
-        eyePt[2] += .5;
+        play_bool = !play_bool;
     }
 }
